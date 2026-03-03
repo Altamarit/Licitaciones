@@ -1,0 +1,8 @@
+- [x] cuando se termina la importación volver a la pantalla de lista
+- [x] el boton "Cargar Excel" cambiara a "Cargar Licitaciones"
+- [x] añadir una barra de progreso mientras se importa el fichero
+- [x] revisa el codigo de colores para idoneidad, aparece todo en verde. Para Baja y Muy baja lo quiero en rojo
+- [x] en la pantalla de detalle el URL tiene que ser clicable
+- [x] añade el numero de expediente a la lista y a la pantalla de detalle
+- [x] el campo Importe hay que representarlos en miles; tienes que dividirlos por 1000
+- [x] ninguno de los PDF scrapeados es visible. "Failed to load PDF document"

@@ -1,0 +1,21 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - licitaciones_data:/data
+    environment:
+      - DATA_DIR=/data
+      - DATABASE_URL=sqlite:////data/licitaciones.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  licitaciones_data:

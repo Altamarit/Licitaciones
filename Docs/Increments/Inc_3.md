@@ -1,0 +1,3 @@
+- [x] en la pantalla de detalle no necesitamos el link a "Volver a la lista"
+- [x] los importes en la pantalla de detalle presentalos con 2 decimales
+- [x] revisa el algoritmo de idoneidad, todos los registros estan con idoneidad baja. Usar el campo Titulo en el fichero que se importa para validar si representa una oportunidad para una empresa segun se describe en el Descripcion de la Empresa (configuracion)
