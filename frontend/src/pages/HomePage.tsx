@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { licitacionesApi, type LicitacionFilters } from '../api/licitaciones'
 import { excelApi } from '../api/excel'
 import { scrapingApi } from '../api/scraping'
-import type { Licitacion, KPIs, FicheroExcel } from '../types'
+import type { Licitacion, KPIs, FicheroExcel, CalculoIdoneidadResponse } from '../types'
 import { KpiCards } from '../components/KpiCards'
 import { FilterPanel } from '../components/FilterPanel'
 import { LicitacionTable } from '../components/LicitacionTable'
+import { IdoneidadModal } from '../components/IdoneidadModal'
 
 export function HomePage() {
   const [items, setItems] = useState<Licitacion[]>([])
@@ -21,6 +22,8 @@ export function HomePage() {
   const [scraping, setScraping] = useState(false)
   const [ficheroId, setFicheroId] = useState<number | undefined>()
   const [filterState, setFilterState] = useState<Partial<LicitacionFilters>>({})
+  const [modalData, setModalData] = useState<CalculoIdoneidadResponse | null>(null)
+  const [modalLoading, setModalLoading] = useState(false)
 
   const filters: LicitacionFilters = {
     page,
@@ -108,6 +111,28 @@ export function HomePage() {
     }
   }
 
+  const handleCalcularIdoneidad = async (id: number) => {
+    setModalLoading(true)
+    setModalData(null)
+    try {
+      const res = await licitacionesApi.calcularIdoneidad(id)
+      setModalData(res.data)
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? res.data.licitacion : item))
+      )
+    } catch (e) {
+      console.error('Error al calcular idoneidad:', e)
+      setModalLoading(false)
+    } finally {
+      setModalLoading(false)
+    }
+  }
+
+  const handleCloseModal = () => {
+    setModalData(null)
+    setModalLoading(false)
+  }
+
   const filterPanelState = {
     idoneidad: filterState.idoneidad,
     estado_decision: filterState.estado_decision,
@@ -185,6 +210,13 @@ export function HomePage() {
         pageSize={pageSize}
         total={total}
         onPageChange={setPage}
+        onCalcularIdoneidad={handleCalcularIdoneidad}
+      />
+
+      <IdoneidadModal
+        data={modalData}
+        loading={modalLoading}
+        onClose={handleCloseModal}
       />
     </div>
   )

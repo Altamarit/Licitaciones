@@ -131,6 +131,15 @@ export function ConfigPage() {
                 placeholder="Obtener en aistudio.google.com"
               />
             </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.calcular_idoneidad_import ?? true}
+                onChange={(e) => setConfig({ ...config, calcular_idoneidad_import: e.target.checked })}
+                className="rounded border-[#E4E4E7]"
+              />
+              <span className="text-sm text-[#4B5563]">Calcular idoneidad durante importación</span>
+            </label>
           </div>
         </div>
 

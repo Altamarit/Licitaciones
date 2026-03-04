@@ -1,12 +1,12 @@
 """Router de licitaciones - CRUD, filtros, KPIs."""
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 
 from app.database import get_db
-from app.models import Licitacion
+from app.models import Licitacion, Config
 from pydantic import BaseModel
 from app.schemas import (
     LicitacionResponse,
@@ -205,6 +205,15 @@ class BatchIdoneidadRequest(BaseModel):
     idoneidad_categoria: str
 
 
+class CalculoIdoneidadResponse(BaseModel):
+    expediente: str
+    texto_licitacion: str
+    descripcion_empresa: str
+    resultado_score: float
+    resultado_categoria: str
+    licitacion: LicitacionResponse
+
+
 @router.post("/batch-idoneidad")
 def update_idoneidad_batch(
     body: BatchIdoneidadRequest,
@@ -220,3 +229,51 @@ def update_idoneidad_batch(
     )
     db.commit()
     return {"updated": updated}
+
+
+@router.post("/{licitacion_id}/calcular-idoneidad", response_model=CalculoIdoneidadResponse)
+def calcular_idoneidad_licitacion(
+    licitacion_id: int,
+    db: Session = Depends(get_db),
+):
+    """Calcular idoneidad para una licitación individual (CU-01)."""
+    import os
+    from app.services.ai_service import calcular_idoneidad, generar_abreviado
+
+    lic = db.query(Licitacion).filter(Licitacion.id == licitacion_id).first()
+    if not lic:
+        raise HTTPException(status_code=404, detail="Licitación no encontrada")
+
+    cfg = db.query(Config).first()
+    api_key = cfg.gemini_api_key if cfg else os.getenv("GEMINI_API_KEY", "")
+    model = cfg.gemini_model if cfg else "gemini-2.5-flash-lite"
+    desc_empresa = cfg.empresa_descripcion if cfg else ""
+
+    if not api_key or not desc_empresa:
+        raise HTTPException(400, "Falta API key o descripción de empresa en configuración")
+
+    texto_licitacion = lic.titulo or ""
+
+    try:
+        score, cat = calcular_idoneidad(desc_empresa, texto_licitacion, api_key, model)
+        lic.idoneidad_score = score
+        lic.idoneidad_categoria = cat
+    except Exception as e:
+        raise HTTPException(500, f"Error al calcular idoneidad: {str(e)}")
+
+    try:
+        lic.abreviado = generar_abreviado(texto_licitacion, api_key, model)
+    except Exception:
+        lic.abreviado = texto_licitacion[:150]
+
+    db.commit()
+    db.refresh(lic)
+
+    return CalculoIdoneidadResponse(
+        expediente=lic.expediente or "",
+        texto_licitacion=texto_licitacion,
+        descripcion_empresa=desc_empresa,
+        resultado_score=score,
+        resultado_categoria=cat,
+        licitacion=_lic_to_response(lic),
+    )

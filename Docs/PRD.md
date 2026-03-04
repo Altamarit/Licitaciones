@@ -192,7 +192,18 @@ La aplicación utiliza **Google Gemini** como proveedor de IA para:
 - Generación de resúmenes semánticos de títulos.
 - Extracción de datos de pliegos (obligaciones, entregables, importes, riesgos).
 
-La API key se obtiene gratuitamente en [Google AI Studio](https://aistudio.google.com). El tier gratuito incluye límites generosos (aprox. 60 peticiones/minuto, 1M tokens/mes).
+### Modelos utilizados
+
+| Función | Modelo | Justificación |
+|---------|--------|---------------|
+| Idoneidad y resúmenes | `gemini-2.5-flash-lite` | Rápido, económico, 1000 req/día en tier gratuito |
+| Extracción de pliegos | `gemini-2.5-flash` | Mayor capacidad de análisis para documentos largos |
+
+### Configuración
+
+- **API key:** Se obtiene gratuitamente en [Google AI Studio](https://aistudio.google.com).
+- **Librería:** `google-genai` (la librería `google-generativeai` está deprecada desde 2025).
+- **Tier gratuito:** ~15 req/min para flash-lite, ~10 req/min para flash, cuota diaria según modelo.
 
 ---
 

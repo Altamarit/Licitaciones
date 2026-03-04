@@ -2,27 +2,27 @@
 import json
 from typing import Optional, Dict, Any
 
-import google.generativeai as genai
+from google import genai
 
 
-def _configure(api_key: Optional[str] = None) -> bool:
-    """Configura la API de Gemini. Retorna True si hay key válida."""
+def _get_client(api_key: Optional[str] = None) -> Optional[genai.Client]:
+    """Crea un cliente de Gemini. Retorna None si no hay key válida."""
     if not api_key or not api_key.strip():
-        return False
-    genai.configure(api_key=api_key.strip())
-    return True
+        return None
+    return genai.Client(api_key=api_key.strip())
 
 
 def calcular_idoneidad(
     descripcion_empresa: str,
     descripcion_licitacion: str,
     api_key: str,
-    model: str = "gemini-1.5-flash",
+    model: str = "gemini-2.5-flash-lite",
 ) -> tuple[float, str]:
     """
     Calcula idoneidad 0-100 y categoría (muy alta, alta, baja, muy baja).
     """
-    if not _configure(api_key) or not descripcion_empresa:
+    client = _get_client(api_key)
+    if not client or not descripcion_empresa:
         return 0.0, ""
 
     prompt = f"""Eres un experto en matching entre empresas y licitaciones públicas.
@@ -44,29 +44,39 @@ Responde SOLO con un JSON válido en una línea, sin markdown:
 {{"score": <número 0-100>, "categoria": "<muy alta|alta|baja|muy baja>"}}"""
 
     try:
-        gemini_model = genai.GenerativeModel(model)
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config={"temperature": 0.3},
+        response = client.models.generate_content(
+            model=model,
+            contents=prompt,
+            config={"temperature": 0.3},
         )
         text = (response.text or "").strip()
+        print(f"[AI] Respuesta raw del modelo: {text[:500]}")
+        
         if text.startswith("```"):
             text = text.split("```")[1].strip()
         if text.lower().startswith("json"):
             text = text[4:].strip()
+        
+        print(f"[AI] Texto limpio para parsear: {text}")
         data = json.loads(text)
         score = float(data.get("score", 50))
-        cat = data.get("categoria", "baja")
+        cat = data.get("categoria", "baja").lower()
+        
+        print(f"[AI] Score: {score}, Categoría: {cat}")
+        
         if cat not in ("muy alta", "alta", "baja", "muy baja"):
+            print(f"[AI] Categoría '{cat}' no reconocida, usando 'baja'")
             cat = "baja"
         return score, cat
-    except Exception:
+    except Exception as e:
+        print(f"[AI] ERROR: {type(e).__name__}: {e}")
         return 50.0, "baja"
 
 
-def generar_abreviado(titulo: str, api_key: str, model: str = "gemini-1.5-flash") -> str:
+def generar_abreviado(titulo: str, api_key: str, model: str = "gemini-2.5-flash-lite") -> str:
     """Genera resumen semántico del título (máx 150 caracteres)."""
-    if not _configure(api_key) or not titulo:
+    client = _get_client(api_key)
+    if not client or not titulo:
         return titulo[:150] if titulo else ""
 
     prompt = f"""Resume este título de licitación en máximo 150 caracteres, manteniendo la esencia:
@@ -75,8 +85,11 @@ def generar_abreviado(titulo: str, api_key: str, model: str = "gemini-1.5-flash"
 Solo el resumen, sin comillas ni explicaciones."""
 
     try:
-        gemini_model = genai.GenerativeModel(model)
-        response = gemini_model.generate_content(prompt, generation_config={"temperature": 0.2})
+        response = client.models.generate_content(
+            model=model,
+            contents=prompt,
+            config={"temperature": 0.2},
+        )
         return (response.text or "").strip()[:150]
     except Exception:
         return titulo[:150]
@@ -86,12 +99,13 @@ def extraer_datos_pliego(
     texto_pliego: str,
     titulo_licitacion: str,
     api_key: str,
-    model: str = "gemini-1.5-pro",
+    model: str = "gemini-2.5-flash",
 ) -> Dict[str, Any]:
     """
     Extrae obligaciones, entregables, importes, lotes, garantías y riesgos.
     """
-    if not _configure(api_key) or not texto_pliego:
+    client = _get_client(api_key)
+    if not client or not texto_pliego:
         return {
             "datos_economicos": {},
             "entregables": [],
@@ -121,8 +135,11 @@ Devuelve SOLO un JSON válido con esta estructura (sin markdown):
 }}"""
 
     try:
-        gemini_model = genai.GenerativeModel(model)
-        response = gemini_model.generate_content(prompt, generation_config={"temperature": 0.2})
+        response = client.models.generate_content(
+            model=model,
+            contents=prompt,
+            config={"temperature": 0.2},
+        )
         text = (response.text or "").strip()
         if text.startswith("```"):
             text = text.split("```")[1].strip()
@@ -145,7 +162,7 @@ def recalcular_idoneidad_post_scraping(
     titulo: str,
     datos_extraidos: Dict[str, Any],
     api_key: str,
-    model: str = "gemini-1.5-flash",
+    model: str = "gemini-2.5-flash-lite",
 ) -> tuple[float, str]:
     """Recalcula idoneidad con más contexto tras el scraping."""
     contexto = f"Título: {titulo}\nEntregables: {datos_extraidos.get('entregables', [])}\nRiesgos: {datos_extraidos.get('riesgos', [])}"

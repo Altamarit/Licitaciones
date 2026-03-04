@@ -27,6 +27,12 @@ def _get_config(db: Session) -> Config:
 
 def _process_licitaciones_ai(db: Session, licitaciones: list, cfg: Config):
     """Calcula idoneidad y abreviado con IA para cada licitación."""
+    if not getattr(cfg, 'calcular_idoneidad_import', True):
+        for lic in licitaciones:
+            lic.idoneidad_categoria = "no calculado"
+            lic.abreviado = (lic.titulo or "")[:150]
+        return
+
     api_key = cfg.gemini_api_key or os.getenv("GEMINI_API_KEY", "")
     model = cfg.gemini_model or "gemini-1.5-flash"
     desc = cfg.empresa_descripcion or ""

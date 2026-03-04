@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Licitacion, LicitacionListResponse, KPIs, FicheroExcel } from '../types'
+import type { Licitacion, LicitacionListResponse, KPIs, FicheroExcel, CalculoIdoneidadResponse } from '../types'
 
 export interface LicitacionFilters {
   page?: number
@@ -32,4 +32,7 @@ export const licitacionesApi = {
 
   batchIdoneidad: (licitacion_ids: number[], idoneidad_categoria: string) =>
     api.post('/licitaciones/batch-idoneidad', { licitacion_ids, idoneidad_categoria }),
+
+  calcularIdoneidad: (id: number) =>
+    api.post<CalculoIdoneidadResponse>(`/licitaciones/${id}/calcular-idoneidad`),
 }

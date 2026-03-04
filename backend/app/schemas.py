@@ -13,6 +13,7 @@ class ConfigBase(BaseModel):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-1.5-flash"
     gemini_model_extraction: str = "gemini-1.5-pro"
+    calcular_idoneidad_import: bool = True
 
 
 class ConfigResponse(ConfigBase):

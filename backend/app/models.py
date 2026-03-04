@@ -16,8 +16,9 @@ class Config(Base):
     dias_scraping_antiguo = Column(Integer, default=7)
     scrapes_concurrentes = Column(Integer, default=3)
     gemini_api_key = Column(String(255), default="")
-    gemini_model = Column(String(100), default="gemini-1.5-flash")
-    gemini_model_extraction = Column(String(100), default="gemini-1.5-pro")
+    gemini_model = Column(String(100), default="gemini-2.5-flash-lite")
+    gemini_model_extraction = Column(String(100), default="gemini-2.5-flash")
+    calcular_idoneidad_import = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

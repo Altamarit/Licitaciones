@@ -19,6 +19,7 @@ class ConfigUpdate(BaseModel):
     gemini_api_key: Optional[str] = None
     gemini_model: Optional[str] = None
     gemini_model_extraction: Optional[str] = None
+    calcular_idoneidad_import: Optional[bool] = None
 
 
 @router.get("", response_model=ConfigResponse)
@@ -61,6 +62,8 @@ def update_config(data: ConfigUpdate, db: Session = Depends(get_db)):
         cfg.gemini_model = data.gemini_model
     if data.gemini_model_extraction is not None:
         cfg.gemini_model_extraction = data.gemini_model_extraction
+    if data.calcular_idoneidad_import is not None:
+        cfg.calcular_idoneidad_import = data.calcular_idoneidad_import
 
     db.commit()
     db.refresh(cfg)
@@ -79,6 +82,7 @@ def reset_config(db: Session = Depends(get_db)):
     cfg.scrapes_concurrentes = 3
     cfg.gemini_model = "gemini-1.5-flash"
     cfg.gemini_model_extraction = "gemini-1.5-pro"
+    cfg.calcular_idoneidad_import = True
     db.commit()
     db.refresh(cfg)
     return {"status": "ok"}

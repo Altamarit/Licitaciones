@@ -1,0 +1,1 @@
+hecho - cuando haga click en el campo de idoneidad "no calculado" muestra una ventana con la siguiente informacion: El expediente, el texto usado en la llamada al modelo de google, el texto usado como descripcion de la empresa, y el resultado. Pon a esa ventana un boton "volver" para volver a la pantalla de lista. 

@@ -55,6 +55,7 @@ export interface Config {
   gemini_api_key?: string
   gemini_model?: string
   gemini_model_extraction?: string
+  calcular_idoneidad_import?: boolean
 }
 
 export interface FicheroExcel {
@@ -62,4 +63,13 @@ export interface FicheroExcel {
   nombre_fichero: string
   fecha_carga?: string
   total_licitaciones: number
+}
+
+export interface CalculoIdoneidadResponse {
+  expediente: string
+  texto_licitacion: string
+  descripcion_empresa: string
+  resultado_score: number
+  resultado_categoria: string
+  licitacion: Licitacion
 }
